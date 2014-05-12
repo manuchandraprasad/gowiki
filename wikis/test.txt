@@ -1,1 +1,2 @@
-This is my wiki for testing 
+This will be an internal link to [Frontpage]
+
