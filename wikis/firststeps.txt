@@ -1,0 +1,4 @@
+First run "go build wiki.go" 
+Then, ./wiki 
+Create new pages using /edit/<pagename> 
+View Them using /view/<pagename>
