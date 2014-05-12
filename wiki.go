@@ -1,7 +1,3 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 package main
 
 import (
@@ -15,6 +11,9 @@ type Page struct {
 	Title string
 	Body  []byte
 }
+
+var template_dir = "templates"
+var templates = template.Must(template.ParseFiles(template_dir+"/edit.html", template_dir+"/view.html"))
 
 func (p *Page) save() error {
 	filename := p.Title + ".txt"
@@ -31,8 +30,14 @@ func loadPage(title string) (*Page, error) {
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
-	t, _ := template.ParseFiles("templates/" + tmpl + ".html")
-	t.Execute(w, p)
+	//When preloading all templates, dont prefix the folder name
+	// Just use filename instead .
+	// FIXME: What to do when template names are same accross folders ?
+	//eg: /templates/users/edit.html & /templates/wikis/edit.html
+	err := templates.ExecuteTemplate(w, tmpl+".html", p)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func viewHandler(w http.ResponseWriter, r *http.Request) {
@@ -61,7 +66,11 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
 	title := r.URL.Path[len("/save/"):]
 	body := r.FormValue("body")
 	p := &Page{Title: title, Body: []byte(body)}
-	p.save()
+	err := p.save()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	http.Redirect(w, r, "/view/"+title, http.StatusFound)
 }
 
